@@ -19,6 +19,11 @@ typedef NTSTATUS(WINAPI* tagZwQuerySystemInformation)(
 	_Out_opt_ PULONG                   ReturnLength
 	);
 
+typedef HWND(NTAPI* tagNtUserWindowFromPoint)(
+    LONG X,
+	LONG Y
+    );
+
 typedef struct _SYSTEM_PROCESS_INFORMATION {
 	ULONG NextEntryOffset;
 	ULONG NumberOfThreads;

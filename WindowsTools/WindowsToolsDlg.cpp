@@ -15,9 +15,10 @@
 #include "DlalogWindowStyle.h"
 #include "DlalogCodeView.h"
 
-HMODULE hDll = LoadLibrary(TEXT("Ntdll.dll"));
-tagZwQuerySystemInformation ZwQuerySystemInformation = (tagZwQuerySystemInformation)GetProcAddress(hDll, "ZwQuerySystemInformation");
-
+HMODULE hDll_Ntdll = LoadLibrary(TEXT("Ntdll.dll"));
+HMODULE hDll_win32u = LoadLibrary(TEXT("win32u.dll"));
+tagZwQuerySystemInformation ZwQuerySystemInformation = (tagZwQuerySystemInformation)GetProcAddress(hDll_Ntdll, "ZwQuerySystemInformation");
+tagNtUserWindowFromPoint NtUserWindowFromPoint = (tagNtUserWindowFromPoint)GetProcAddress(hDll_win32u, "NtUserWindowFromPoint");
 HWND MarkWindowHwnd = NULL;
 HWND SelectWindowHwnd = NULL;
 HTREEITEM SelectWindowItam = NULL;
@@ -957,7 +958,8 @@ void CWindowsToolsDlg::OnLButtonUp(UINT nFlags, CPoint point)
 		InvalidateRect(CRect(30, 30, 61, 58));
 		POINT mpoint;
 		GetCursorPos(&mpoint);
-		HWND hWnd = ::WindowFromPoint(mpoint);
+		//HWND hWnd = ::WindowFromPoint(mpoint);
+		HWND hWnd = NtUserWindowFromPoint(mpoint.x, mpoint.y);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), hWnd);
@@ -972,7 +974,8 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 	{
 		POINT mpoint;
 		GetCursorPos(&mpoint);
-		HWND hWnd = ::WindowFromPoint(mpoint);
+		//HWND hWnd = ::WindowFromPoint(mpoint);
+		HWND hWnd = NtUserWindowFromPoint(mpoint.x, mpoint.y);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		//Invalidate();
