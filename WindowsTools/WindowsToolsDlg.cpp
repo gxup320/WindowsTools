@@ -16,9 +16,7 @@
 #include "DlalogCodeView.h"
 
 HMODULE hDll_Ntdll = LoadLibrary(TEXT("Ntdll.dll"));
-HMODULE hDll_win32u = LoadLibrary(TEXT("win32u.dll"));
 tagZwQuerySystemInformation ZwQuerySystemInformation = (tagZwQuerySystemInformation)GetProcAddress(hDll_Ntdll, "ZwQuerySystemInformation");
-tagNtUserWindowFromPoint NtUserWindowFromPoint = (tagNtUserWindowFromPoint)GetProcAddress(hDll_win32u, "NtUserWindowFromPoint");
 HWND MarkWindowHwnd = NULL;
 HWND SelectWindowHwnd = NULL;
 HTREEITEM SelectWindowItam = NULL;
@@ -935,6 +933,49 @@ void CWindowsToolsDlg::OnTvnSelchangedTreeWindowsTree(NMHDR* pNMHDR, LRESULT* pR
 	*pResult = 0;
 }
 
+HWND LocalWindowFromPoint(POINT point, HWND parent)
+{
+	if (parent == NULL)
+	{
+		HWND hWnd = ::WindowFromPoint(point);
+		parent = GetParent(hWnd);
+		if (parent == NULL)
+		{
+			parent = hWnd;
+		}
+	}
+	//获取子窗口
+	HWND cur = GetWindow(parent, GW_CHILD);
+	POINT minWindow = { 0x3FFFFFFF, 0x3FFFFFFF };
+	HWND minWindowHandle = NULL;
+	while (cur != NULL)
+	{
+		if (IsWindow(cur) == FALSE)
+		{
+			cur = GetWindow(cur, GW_HWNDNEXT);
+			continue;
+		}
+		//判断是否在范围内
+		RECT rect;
+		GetWindowRect(cur, &rect);
+		if (rect.left < point.x && rect.right > point.x && rect.top < point.y && rect.bottom > point.y)
+		{
+			if (minWindow.x + minWindow.y > rect.right - rect.left + rect.bottom - rect.top)
+			{
+				minWindow.x = rect.right - rect.left;
+				minWindow.y = rect.bottom - rect.top;
+				minWindowHandle = cur;
+			}
+		}
+		cur = GetWindow(cur, GW_HWNDNEXT);
+	}
+	if (minWindowHandle == NULL)
+	{
+		return parent;
+	}
+	return LocalWindowFromPoint(point, minWindowHandle);
+}
+
 void CWindowsToolsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
@@ -959,7 +1000,7 @@ void CWindowsToolsDlg::OnLButtonUp(UINT nFlags, CPoint point)
 		POINT mpoint;
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
-		HWND hWnd = NtUserWindowFromPoint(mpoint.x, mpoint.y);
+		HWND hWnd = LocalWindowFromPoint(mpoint, NULL);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), hWnd);
@@ -975,7 +1016,7 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 		POINT mpoint;
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
-		HWND hWnd = NtUserWindowFromPoint(mpoint.x, mpoint.y);
+		HWND hWnd = LocalWindowFromPoint(mpoint, NULL);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		//Invalidate();
