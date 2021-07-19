@@ -20,6 +20,8 @@ tagZwQuerySystemInformation ZwQuerySystemInformation = (tagZwQuerySystemInformat
 HWND MarkWindowHwnd = NULL;
 HWND SelectWindowHwnd = NULL;
 HTREEITEM SelectWindowItam = NULL;
+#pragma comment(lib,"Version.lib")
+
 
 #ifdef _DEBUG
 #define new DEBUG_NEW
@@ -1436,7 +1438,43 @@ BOOL CAboutDlg::OnInitDialog()
 
 	// TODO:  Add extra initialization here
 	SetWindowText(AllLanguage->GetLanguageStruct()->TITLE_ABOUT);
-	GetDlgItem(IDC_STATIC_VERSION)->SetWindowText(AllLanguage->GetLanguageStruct()->ABOUT_VERSION);
+	//获取版本信息
+	TCHAR ExecFileName[MAX_PATH] = { 0 };
+	DWORD dwHandle, dwLen;
+	BOOL verStatus;
+	VS_FIXEDFILEINFO * verInfo;
+	CString verString;
+	LPVOID verData = NULL;
+	GetModuleFileName(NULL, ExecFileName, MAX_PATH);
+	dwLen = GetFileVersionInfoSize(ExecFileName, &dwHandle);
+	if (dwLen == 0)
+	{
+		DrowErrorCode(GetLastError(), m_hWnd);
+		CDialogEx::OnOK();
+		return TRUE;
+	}
+	verData = new char[dwLen];
+	verStatus = GetFileVersionInfo(ExecFileName, dwHandle, dwLen, verData);
+	if (!verStatus)
+	{
+		delete[] verData;
+        DrowErrorCode(GetLastError(), m_hWnd);
+        CDialogEx::OnOK();
+        return TRUE;
+	}
+	verStatus = VerQueryValue(verData, _T("\\"), (LPVOID*)&verInfo, (PUINT)&dwLen);
+    if (!verStatus)
+    {
+        delete[] verData;
+        DrowErrorCode(GetLastError(), m_hWnd);
+        CDialogEx::OnOK();
+        return TRUE;
+    }
+	verString.Format(_T("%d.%d.%d.%d"), HIWORD(verInfo->dwFileVersionMS), LOWORD(verInfo->dwFileVersionMS), HIWORD(verInfo->dwFileVersionLS), LOWORD(verInfo->dwFileVersionLS));
+	delete[] verData;
+	CString TempString = AllLanguage->GetLanguageStruct()->ABOUT_VERSION;
+	TempString.Replace(_T("[VERSION]"), verString);
+	GetDlgItem(IDC_STATIC_VERSION)->SetWindowText(TempString);
 	GetDlgItem(IDC_STATIC_COPYRIGHT)->SetWindowText(AllLanguage->GetLanguageStruct()->ABOUT_COPYRIGHT);
 	return TRUE;  // return TRUE unless you set the focus to a control
 				  // EXCEPTION: OCX Property Pages should return FALSE

@@ -39,7 +39,7 @@ struct LanguageStruct
 	CString TITLE_WINDOW_STYLE = _T("Window style");
 
 	//About
-	CString ABOUT_VERSION = _T("Window tools, Version 1.0");
+	CString ABOUT_VERSION = _T("Window tools, Version [VERSION]");
 	CString ABOUT_COPYRIGHT = _T("Copyright (C) GXUP320");
 
 	//Dialog
