@@ -513,7 +513,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	}
 	ToolsDlg->ProcessWindowsRefresh.SetPos(0);
 	std::vector<HWND> hWndList;
-	HWND tHwnd = GetWindow((HWND)65552, GW_CHILD);
+	HWND tHwnd = GetWindow(GetDesktopWindow(), GW_CHILD);
 
 	HTREEITEM hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, ToolsDlg->IconStruct.DESKTOP, ToolsDlg->IconStruct.DESKTOP, 0, TVI_LAST);
 	while (tHwnd != NULL)
