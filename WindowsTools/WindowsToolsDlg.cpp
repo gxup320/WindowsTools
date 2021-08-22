@@ -334,7 +334,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	{
 		return;
 	}
-	if (hWnd == (HWND)65552)
+	if (hWnd == ::GetDesktopWindow())
 	{
 		i = IconStruct.DESKTOP;
 	}
@@ -356,7 +356,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 			{
 				i = image->Add(hicon);
 			}
-			else if (fhWnd == (HWND)65552)
+			else if (fhWnd == ::GetDesktopWindow())
 			{
 				DWORD PID;
 				::GetWindowThreadProcessId(hWnd, &PID);
@@ -387,7 +387,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 		}
 	}
 	HTREEITEM hitem;
-	if (hWnd == (HWND)65552)
+	if (hWnd == ::GetDesktopWindow())
 	{
 		hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, i, i, f, TVI_LAST);
 	}
@@ -418,7 +418,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 		addWindowToTree(ptree, m_hwnd, hitem, image, hWnd);
 		m_hwnd = ::GetWindow(m_hwnd, GW_HWNDNEXT);
 	}
-	if (hWnd == (HWND)65552)
+	if (hWnd == ::GetDesktopWindow())
 	{
 		ptree->SetItem(hitem, TVIF_TEXT, str, 0, 0, NULL, NULL, NULL);
 		ptree->Expand(hitem, TVE_EXPAND);
@@ -513,7 +513,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	}
 	ToolsDlg->ProcessWindowsRefresh.SetPos(0);
 	std::vector<HWND> hWndList;
-	HWND tHwnd = GetWindow(GetDesktopWindow(), GW_CHILD);
+	HWND tHwnd = GetWindow(::GetDesktopWindow(), GW_CHILD);
 
 	HTREEITEM hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, ToolsDlg->IconStruct.DESKTOP, ToolsDlg->IconStruct.DESKTOP, 0, TVI_LAST);
 	while (tHwnd != NULL)
@@ -529,7 +529,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	}
 	for (int i = 0; i < hWndList.size(); i++)
 	{
-		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, (HWND)65552);
+		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, ::GetDesktopWindow());
 		ToolsDlg->ProcessWindowsRefresh.SetPos(i + 1);
 		if (ToolsDlg->m_pTaskBarlist != NULL)
 		{
@@ -537,9 +537,9 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 		}
 	}
 	CString ClassName;
-	::GetClassName((HWND)65552, ClassName.GetBuffer(100), 100);
+	::GetClassName(::GetDesktopWindow(), ClassName.GetBuffer(100), 100);
 	ClassName.ReleaseBuffer();
-	ClassName = _T("65552|") + ClassName + _T("|");
+	ClassName = (size_t)GetDesktopWindow() + _T("|") + ClassName + _T("|");
 	ptree->SetItem(hitem, TVIF_TEXT, ClassName, 0, 0, NULL, NULL, NULL);
 	ptree->Expand(hitem, TVE_EXPAND);
 	HTREEITEM hItem = ptree->GetRootItem();
