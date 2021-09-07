@@ -13,7 +13,7 @@
 #endif
 
 //dump
-#include <minidumpapiset.h>
+//#include <minidumpapiset.h>
 #include <DbgHelp.h>
 #pragma comment(lib, "Dbghelp.lib")
 int GenerateMiniDump(PEXCEPTION_POINTERS pExceptionPointers)

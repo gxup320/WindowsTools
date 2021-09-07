@@ -879,8 +879,10 @@ void DlalogWindowStyle::OnCbnSelchangeStyleComboWindowType()
 	ListStyleEx.SetItemData(tempInt, (DWORD_PTR)WS_EX_LAYERED);
 	tempInt = ListStyleEx.AddString(_T("WS_EX_NOINHERITLAYOUT"));
 	ListStyleEx.SetItemData(tempInt, (DWORD_PTR)WS_EX_NOINHERITLAYOUT);
+#if(WINVER >= 0x0602)
 	tempInt = ListStyleEx.AddString(_T("WS_EX_NOREDIRECTIONBITMAP"));
 	ListStyleEx.SetItemData(tempInt, (DWORD_PTR)WS_EX_NOREDIRECTIONBITMAP);
+#endif /* WINVER >= 0x0602 */
 	tempInt = ListStyleEx.AddString(_T("WS_EX_LAYOUTRTL"));
 	ListStyleEx.SetItemData(tempInt, (DWORD_PTR)WS_EX_LAYOUTRTL);
 	tempInt = ListStyleEx.AddString(_T("WS_EX_COMPOSITED"));
