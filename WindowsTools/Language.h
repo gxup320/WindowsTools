@@ -65,7 +65,10 @@ struct LanguageStruct
 	CString DIALOG_WIDTH = _T("Width:");
 	CString DIALOG_HIGTH = _T("Higth:");
 	CString DIALOG_SPECIFIES_SHOWN = _T("Specifies shown:");
+	CString DIALOG_REFRESH = _T("Refresh");
 	CString DIALOG_SHOW_HIDE_WINDOWS = _T("Show hide windows");
+	CString DIALOG_SHOW_HIDE_CHILD_WINDOWS = _T("Show hide child windows");
+	CString DIALOG_READ_FILE_ICON = _T("Read file icon");
 	CString DIALOG_REFRESH_WINDOWS_TREE = _T("Refresh windows tree");
 	CString DIALOG_TREE_LOADING = _T("Loading...");
 	CString DIALOG_WINDOW_STYLE = _T("Style:");

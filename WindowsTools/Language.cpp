@@ -87,7 +87,10 @@ Language::Language()
 			LanguageTemp.DIALOG_WIDTH = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_WIDTH"), LanguageTemp.DIALOG_WIDTH);
 			LanguageTemp.DIALOG_HIGTH = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_HIGTH"), LanguageTemp.DIALOG_HIGTH);
 			LanguageTemp.DIALOG_SPECIFIES_SHOWN = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_SPECIFIES_SHOWN"), LanguageTemp.DIALOG_SPECIFIES_SHOWN);
+			LanguageTemp.DIALOG_REFRESH = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_REFRESH"), LanguageTemp.DIALOG_REFRESH);
 			LanguageTemp.DIALOG_SHOW_HIDE_WINDOWS = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_SHOW_HIDE_WINDOWS"), LanguageTemp.DIALOG_SHOW_HIDE_WINDOWS);
+			LanguageTemp.DIALOG_SHOW_HIDE_CHILD_WINDOWS = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_SHOW_HIDE_CHILD_WINDOWS"), LanguageTemp.DIALOG_SHOW_HIDE_CHILD_WINDOWS);
+			LanguageTemp.DIALOG_READ_FILE_ICON = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_READ_FILE_ICON"), LanguageTemp.DIALOG_READ_FILE_ICON);
 			LanguageTemp.DIALOG_REFRESH_WINDOWS_TREE = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_REFRESH_WINDOWS_TREE"), LanguageTemp.DIALOG_REFRESH_WINDOWS_TREE);
 			LanguageTemp.DIALOG_TREE_LOADING = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_TREE_LOADING"), LanguageTemp.DIALOG_TREE_LOADING);
 			LanguageTemp.DIALOG_WINDOW_STYLE = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_WINDOW_STYLE"), LanguageTemp.DIALOG_WINDOW_STYLE);

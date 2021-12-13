@@ -64,9 +64,10 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 
-	void addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f, CImageList* image, HWND fhWnd);
+	void addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f, CImageList* image, HWND fhWnd, int* number);
 	//int GetControlTypeID(HWND hWnd, CString ClassName);
 	void GetWindowInfoToWindow(HWND hWnd);
+	friend DWORD ProgressRefresh(CWindowsToolsDlg* ToolsDlg);
 	friend DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg);
 	BOOL SetTreeViewSelect(HTREEITEM RootItemHandle, HWND hWnd);
 	void SetTreeViewBold(HTREEITEM RootItemHandle, HWND hWnd);
@@ -87,10 +88,18 @@ public:
 	CMenu menu;
 	CMenu* pSysMenu = NULL;
 	ITaskbarList3* m_pTaskBarlist = NULL;
+	int Progress_MAX = 0;
+	int Progress_POS = 0;
+	int Progress_SUM = 0;
+	BOOL Progress_ON = FALSE;
+	int WindowClosing = 0;
+	HANDLE hThread_ProgressRefresh = NULL;
+	HANDLE hThread_RefreshWindowsTree = NULL;
 	
 	afx_msg void OnBnClickedButtonRefreshWindowsTree();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
-	BOOL ShowHideWindows;
+	CButton ShowHideWindows;
+	CButton ShowHideChildWindows;
 	CEdit EditWindowHandleDEC;
 	CEdit EditWindowHandleHEX;
 	CEdit EditParentWindowHandle;
@@ -157,4 +166,13 @@ public:
 	afx_msg void OnBnClickedButtonWindowStyleAdvanced();
 	afx_msg void OnWindowGenerateFindCodeFast();
 	afx_msg void OnEnChangeEditWindowStyle();
+	CButton CheckDisabled;
+	CStatic StaticWindowNmuber;
+	afx_msg void OnBnClickedCheckDisabled();
+	afx_msg void OnDestroy();
+
+	CButton ReadFileIcon;
+	afx_msg void OnBnClickedCheckShowHideWindows();
+	afx_msg void OnBnClickedCheckShowHideChildWindows();
+	afx_msg void OnBnClickedCheckReadFileIcon();
 };

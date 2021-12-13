@@ -21,6 +21,8 @@ HWND MarkWindowHwnd = NULL;
 HWND SelectWindowHwnd = NULL;
 HTREEITEM SelectWindowItam = NULL;
 #pragma comment(lib,"Version.lib")
+CString G_ReadPrivateProfileString(CString FileName, CString AppName, CString KeyName, CString Default);
+BOOL G_WritePrivateProfileString(CString FileName, CString AppName, CString KeyName, CString String);
 
 
 #ifdef _DEBUG
@@ -70,7 +72,6 @@ END_MESSAGE_MAP()
 
 CWindowsToolsDlg::CWindowsToolsDlg(CWnd* pParent /*=nullptr*/)
 	: CDialogEx(IDD_WINDOWSTOOLS_DIALOG, pParent)
-	, ShowHideWindows(FALSE)
 	, StaticProcessWOW(_T(""))
 	, StaticParentProcessWOW(_T(""))
 {
@@ -80,7 +81,8 @@ CWindowsToolsDlg::CWindowsToolsDlg(CWnd* pParent /*=nullptr*/)
 void CWindowsToolsDlg::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
-	DDX_Check(pDX, IDC_CHECK_SHOW_HIDE_WINDOWS, ShowHideWindows);
+	DDX_Control(pDX, IDC_CHECK_SHOW_HIDE_WINDOWS, ShowHideWindows);
+	DDX_Control(pDX, IDC_CHECK_SHOW_HIDE_CHILD_WINDOWS, ShowHideChildWindows);
 	DDX_Control(pDX, IDC_EDIT_WINDOW_HANDLE_DEC, EditWindowHandleDEC);
 	DDX_Control(pDX, IDC_EDIT_WINDOW_HANDLE_HEX, EditWindowHandleHEX);
 	DDX_Control(pDX, IDC_EDIT_PARENT_WINDOW_HANDLE, EditParentWindowHandle);
@@ -107,6 +109,9 @@ void CWindowsToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_PROGRESS_WINDOWS_REFRESH, ProcessWindowsRefresh);
 	DDX_Control(pDX, IDC_EDIT_WINDOW_STYLE, EditWindowStyle);
 	DDX_Control(pDX, IDC_EDIT_WINDOW_STYLE_EX, EditWindowStyleEx);
+	DDX_Control(pDX, IDC_CHECK_DISABLED, CheckDisabled);
+	DDX_Control(pDX, IDC_STATIC_WINDOWS_NUMBER, StaticWindowNmuber);
+	DDX_Control(pDX, IDC_CHECK_READ_FILE_ICON, ReadFileIcon);
 }
 
 BEGIN_MESSAGE_MAP(CWindowsToolsDlg, CDialogEx)
@@ -150,6 +155,11 @@ ON_EN_KILLFOCUS(IDC_EDIT_WINDOW_STYLE_EX, &CWindowsToolsDlg::OnEnKillfocusEditWi
 ON_BN_CLICKED(IDC_BUTTON_WINDOW_STYLE_ADVANCED, &CWindowsToolsDlg::OnBnClickedButtonWindowStyleAdvanced)
 ON_COMMAND(ID_WINDOW_GENERATE_FIND_CODE_FAST, &CWindowsToolsDlg::OnWindowGenerateFindCodeFast)
 ON_EN_CHANGE(IDC_EDIT_WINDOW_STYLE, &CWindowsToolsDlg::OnEnChangeEditWindowStyle)
+ON_BN_CLICKED(IDC_CHECK_DISABLED, &CWindowsToolsDlg::OnBnClickedCheckDisabled)
+ON_WM_DESTROY()
+ON_BN_CLICKED(IDC_CHECK_SHOW_HIDE_WINDOWS, &CWindowsToolsDlg::OnBnClickedCheckShowHideWindows)
+ON_BN_CLICKED(IDC_CHECK_SHOW_HIDE_CHILD_WINDOWS, &CWindowsToolsDlg::OnBnClickedCheckShowHideChildWindows)
+ON_BN_CLICKED(IDC_CHECK_READ_FILE_ICON, &CWindowsToolsDlg::OnBnClickedCheckReadFileIcon)
 END_MESSAGE_MAP()
 
 
@@ -220,6 +230,21 @@ BOOL CWindowsToolsDlg::OnInitDialog()
 
 	//Set language
 	SetWindowShowText();
+
+	if (G_ReadPrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideWindows"), _T("FALSE")) == "TRUE")
+	{
+		ShowHideWindows.SetCheck(BST_CHECKED);
+	}
+	if (G_ReadPrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideChildWindows"), _T("TRUE")) == "TRUE")
+	{
+		ShowHideChildWindows.SetCheck(BST_CHECKED);
+	}
+	if (G_ReadPrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ReadFileIcon"), _T("TRUE")) == "TRUE")
+	{
+		ReadFileIcon.SetCheck(BST_CHECKED);
+	}
+	hThread_ProgressRefresh = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProgressRefresh, this, 0, NULL);
+	
 
 	OnBnClickedButtonRefreshWindowsTree();
 
@@ -310,7 +335,7 @@ CString GetProcessPath(DWORD PID)
 }
 
 
-void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f, CImageList* image, HWND fhWnd)
+void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f, CImageList* image, HWND fhWnd, int* number)
 {
 	HICON hicon = NULL;
 	CString str;
@@ -330,7 +355,8 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	delete[] WindowText;
 	int i;
 	BOOL swshow = ::IsWindowVisible(hWnd);
-	if (swshow == FALSE && ShowHideWindows == FALSE)
+	if ((swshow == FALSE && ShowHideWindows.GetCheck() == BST_UNCHECKED && f == ptree->GetRootItem()) ||
+		(swshow == FALSE && ShowHideChildWindows.GetCheck() == BST_UNCHECKED && f != ptree->GetRootItem()))
 	{
 		return;
 	}
@@ -358,16 +384,23 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 			}
 			else if (fhWnd == ::GetDesktopWindow())
 			{
-				DWORD PID;
-				::GetWindowThreadProcessId(hWnd, &PID);
-				if (PID != 0)
+				if (ReadFileIcon.GetCheck() == BST_CHECKED)
 				{
-					//SHFILEINFO sIcon;
-					hicon = ::ExtractIcon(AfxGetInstanceHandle(), GetProcessPath(PID), 0);
-					if (hicon != NULL)
+					DWORD PID;
+					::GetWindowThreadProcessId(hWnd, &PID);
+					if (PID != 0)
 					{
-						i = image->Add(hicon);
-						DestroyIcon(hicon);
+						//SHFILEINFO sIcon;
+						hicon = ::ExtractIcon(AfxGetInstanceHandle(), GetProcessPath(PID), 0);
+						if (hicon != NULL)
+						{
+							i = image->Add(hicon);
+							DestroyIcon(hicon);
+						}
+						else
+						{
+							i = IconStruct.PROCESS;
+						}
 					}
 					else
 					{
@@ -386,6 +419,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 			}
 		}
 	}
+	(*number)++;
 	HTREEITEM hitem;
 	if (hWnd == ::GetDesktopWindow())
 	{
@@ -415,7 +449,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	HWND m_hwnd = ::GetWindow(hWnd, GW_CHILD);
 	while (m_hwnd != NULL)
 	{
-		addWindowToTree(ptree, m_hwnd, hitem, image, hWnd);
+		addWindowToTree(ptree, m_hwnd, hitem, image, hWnd, number);
 		m_hwnd = ::GetWindow(m_hwnd, GW_HWNDNEXT);
 	}
 	if (hWnd == ::GetDesktopWindow())
@@ -424,6 +458,61 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 		ptree->Expand(hitem, TVE_EXPAND);
 	}
 
+}
+
+DWORD ProgressRefresh(CWindowsToolsDlg* ToolsDlg)
+{
+	int Progress_MAX = 0;
+	int Progress_POS = 0;
+	int Progress_SUM = 0;
+	BOOL Progress_ON = FALSE;
+	HWND ToolsDlgHwnd = ToolsDlg->m_hWnd;
+	while (ToolsDlg->WindowClosing == 0)
+	{
+		if (Progress_ON != ToolsDlg->Progress_ON)
+		{
+			Progress_ON = ToolsDlg->Progress_ON;
+			if (Progress_ON)
+			{
+				if (ToolsDlg->m_pTaskBarlist != NULL)
+				{
+					ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_INDETERMINATE);
+					ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, 0, 0);
+				}
+			}
+			else
+			{
+				if (ToolsDlg->m_pTaskBarlist != NULL)
+				{
+					ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_NOPROGRESS);
+				}
+			}
+		}
+		if (Progress_POS != ToolsDlg->Progress_POS)
+		{
+			Progress_POS = ToolsDlg->Progress_POS;
+			ToolsDlg->ProcessWindowsRefresh.SetPos(Progress_POS);
+			if (ToolsDlg->m_pTaskBarlist != NULL && Progress_ON)
+			{
+				ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, Progress_POS, Progress_MAX);
+			}
+		}
+		if (Progress_MAX != ToolsDlg->Progress_MAX)
+		{
+			Progress_MAX = ToolsDlg->Progress_MAX;
+			ToolsDlg->ProcessWindowsRefresh.SetRange(0, Progress_MAX);
+		}
+		if (Progress_SUM != ToolsDlg->Progress_SUM)
+		{
+			Progress_SUM = ToolsDlg->Progress_SUM;
+			CString tempString;
+			tempString.Format(_T("%d"), Progress_SUM);
+			ToolsDlg->StaticWindowNmuber.SetWindowText(tempString);
+		}
+		Sleep(100);
+	}
+	ToolsDlg->WindowClosing++;
+	return 0;
 }
 
 DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
@@ -446,6 +535,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 
 	if (ToolsDlg->m_image != NULL)
 	{
+		ToolsDlg->m_image->DeleteImageList();
 		delete ToolsDlg->m_image;
 	}
 	ToolsDlg->m_image = new CImageList;
@@ -506,12 +596,14 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 // 	{
 // 		CoCreateInstance(CLSID_TaskbarList, NULL, CLSCTX_ALL, IID_ITaskbarList3, (void**)&ToolsDlg->m_pTaskBarlist);
 // 	}
-	if (ToolsDlg->m_pTaskBarlist != NULL)
-	{
-		ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_INDETERMINATE);
-		ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, 0, 0);
-	}
-	ToolsDlg->ProcessWindowsRefresh.SetPos(0);
+	//if (ToolsDlg->m_pTaskBarlist != NULL)
+	//{
+	//	ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_INDETERMINATE);
+	//	ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, 0, 0);
+	//}
+	ToolsDlg->Progress_ON = TRUE;
+	//ToolsDlg->ProcessWindowsRefresh.SetPos(0);
+	ToolsDlg->Progress_POS = 0;
 	std::vector<HWND> hWndList;
 	HWND tHwnd = GetWindow(::GetDesktopWindow(), GW_CHILD);
 
@@ -522,19 +614,25 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 		tHwnd = GetWindow(tHwnd, GW_HWNDNEXT);
 	}
 
-	ToolsDlg->ProcessWindowsRefresh.SetRange(0,(short)hWndList.size());
-	if (ToolsDlg->m_pTaskBarlist != NULL)
+	//ToolsDlg->ProcessWindowsRefresh.SetRange(0,(short)hWndList.size());
+	ToolsDlg->Progress_MAX = hWndList.size();
+	//if (ToolsDlg->m_pTaskBarlist != NULL)
+	//{
+	//	ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, 0, hWndList.size());
+	//}
+	for (int i = 0, number = 0; i < hWndList.size() && ToolsDlg->WindowClosing == 0; i++)
 	{
-		ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, 0, hWndList.size());
-	}
-	for (int i = 0; i < hWndList.size(); i++)
-	{
-		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, ::GetDesktopWindow());
-		ToolsDlg->ProcessWindowsRefresh.SetPos(i + 1);
-		if (ToolsDlg->m_pTaskBarlist != NULL)
-		{
-			ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, i + 1, hWndList.size());
-		}
+		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, ::GetDesktopWindow(), &number);
+		//ToolsDlg->ProcessWindowsRefresh.SetPos(i + 1);
+		ToolsDlg->Progress_POS = i + 1;
+		//CString tempString;
+		//tempString.Format(_T("%d"), number);
+		//ToolsDlg->StaticWindowNmuber.SetWindowText(tempString);
+		ToolsDlg->Progress_SUM = number;
+		//if (ToolsDlg->m_pTaskBarlist != NULL)
+		//{
+		//	ToolsDlg->m_pTaskBarlist->SetProgressValue(ToolsDlg->m_hWnd, i + 1, hWndList.size());
+		//}
 	}
 	CString ClassName;
 	::GetClassName(::GetDesktopWindow(), ClassName.GetBuffer(100), 100);
@@ -549,12 +647,15 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	}
 	ToolsDlg->TreeWindowsTreeCtrl.EnableWindow(TRUE);
 	ToolsDlg->menu.EnableMenuItem(ID_WINDOW_REFRESH_WINDOW_TREE, MF_ENABLED);
-	ToolsDlg->GetDlgItem(IDC_CHECK_SHOW_HIDE_WINDOWS)->EnableWindow(TRUE);
+	ToolsDlg->ShowHideWindows.EnableWindow(TRUE);
+	ToolsDlg->ShowHideChildWindows.EnableWindow(TRUE);
+	ToolsDlg->ReadFileIcon.EnableWindow(TRUE);
 	ToolsDlg->GetDlgItem(IDC_BUTTON_REFRESH_WINDOWS_TREE)->EnableWindow(TRUE);
-	if (ToolsDlg->m_pTaskBarlist != NULL)
-	{
-		ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_NOPROGRESS);
-	}
+	//if (ToolsDlg->m_pTaskBarlist != NULL)
+	//{
+	//	ToolsDlg->m_pTaskBarlist->SetProgressState(ToolsDlg->m_hWnd, TBPF_NOPROGRESS);
+	//}
+	ToolsDlg->Progress_ON = FALSE;
 	return 0;
 }
 
@@ -563,14 +664,18 @@ void CWindowsToolsDlg::OnBnClickedButtonRefreshWindowsTree()
 	// TODO: 在此添加控件通知处理程序代码
 	TreeWindowsTreeCtrl.EnableWindow(FALSE);
 	menu.EnableMenuItem(ID_WINDOW_REFRESH_WINDOW_TREE, MF_GRAYED);
-	GetDlgItem(IDC_CHECK_SHOW_HIDE_WINDOWS)->EnableWindow(FALSE);
+	ShowHideWindows.EnableWindow(FALSE);
+	ShowHideChildWindows.EnableWindow(FALSE);
+	ReadFileIcon.EnableWindow(FALSE);
 	GetDlgItem(IDC_BUTTON_REFRESH_WINDOWS_TREE)->EnableWindow(FALSE);
 	UpdateData(TRUE);
-	HANDLE hThread_RefreshWindowsTree = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RefreshWindowsTree, this, 0, NULL);
+	DWORD TexitCode;
 	if (hThread_RefreshWindowsTree != NULL)
 	{
+		GetExitCodeThread(hThread_RefreshWindowsTree, &TexitCode);
 		CloseHandle(hThread_RefreshWindowsTree);
 	}
+	hThread_RefreshWindowsTree = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)RefreshWindowsTree, this, 0, NULL);
 	
 	//RefreshWindowsTree(this);
 }
@@ -695,7 +800,15 @@ void CWindowsToolsDlg::GetWindowInfoToWindow(HWND hWnd)
 	{
 		ComboSpecifiesShow.SetCurSel(0);
 	}
-	
+	//Disabled
+	if (::IsWindowEnabled(hWnd))
+	{
+		CheckDisabled.SetCheck(BST_UNCHECKED);
+	}
+	else
+	{
+		CheckDisabled.SetCheck(BST_CHECKED);
+	}
 	//Process and Thread
 	DWORD ProcessID = 0;
 	DWORD ThreadHandle = ::GetWindowThreadProcessId(hWnd, &ProcessID);
@@ -940,8 +1053,9 @@ HWND LocalWindowFromPoint(POINT point, HWND parent)
 	if (parent == NULL)
 	{
 		HWND hWnd = ::WindowFromPoint(point);
-		parent = GetParent(hWnd);
-		if (parent == NULL)
+		parent = ::GetParent(hWnd);
+		TRACE("hwnd is %d parent is null, GetParent:%d(%d)\n", hWnd, parent, ::IsChild(parent, hWnd));
+		if (parent == NULL || ::IsChild(parent, hWnd) == FALSE)
 		{
 			parent = hWnd;
 		}
@@ -1038,10 +1152,55 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 	CDialogEx::OnMouseMove(nFlags, point);
 }
 
+void DoEvents()
+{
+	MSG msg;
+	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	{
+		::TranslateMessage(&msg);
+		::DispatchMessage(&msg);
+	}
+}
 
 void CWindowsToolsDlg::OnClose()
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
+	if (WindowClosing)
+	{
+		return;
+	}
+	DWORD TexitCode;
+	WindowClosing = 1;//在全局添加正在退出标记
+	EnableWindow(FALSE);//禁用窗口，防止被输入造成不必要的麻烦
+	if (hThread_ProgressRefresh != NULL)
+	{
+		TexitCode = STILL_ACTIVE;
+		while (TexitCode == STILL_ACTIVE)//如果线程仍然继续，就等待
+		{
+			DoEvents();//处理窗口事件，没有这个的话操作窗口的代码会一直等待，出现假死状态
+			Sleep(1);
+			GetExitCodeThread(hThread_ProgressRefresh, &TexitCode);//获取线程返回值，正常情况是获取到线程里执行return返回的值，若线程没有结束会获取到STILL_ACTIVE
+		}
+		TRACE("hThread_ProgressRefresh:%u\n", TexitCode);//输出调试文本
+		CloseHandle(hThread_ProgressRefresh);//关闭线程句柄
+	}
+	if (hThread_RefreshWindowsTree != NULL)
+	{
+		TexitCode = STILL_ACTIVE;
+		while (TexitCode == STILL_ACTIVE)
+		{
+			DoEvents();
+			Sleep(1);
+			GetExitCodeThread(hThread_RefreshWindowsTree, &TexitCode);
+		}
+		TRACE("hThread_RefreshWindowsTree:%u\n", TexitCode);
+		CloseHandle(hThread_RefreshWindowsTree);
+	}
+	if (m_image != NULL)
+	{
+		m_image->DeleteImageList();
+		delete m_image;
+	}
 	CDialogEx::OnClose();
 }
 
@@ -1424,7 +1583,10 @@ void CWindowsToolsDlg::SetWindowShowText()
 	GetDlgItem(IDC_STATIC_WIDTH)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WIDTH);
 	GetDlgItem(IDC_STATIC_HIGTH)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_HIGTH);
 	GetDlgItem(IDC_STATIC_SPECIFIES_SHOWN)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_SPECIFIES_SHOWN);
+	GetDlgItem(IDC_STATIC_REFRESH)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_REFRESH);
 	GetDlgItem(IDC_CHECK_SHOW_HIDE_WINDOWS)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_SHOW_HIDE_WINDOWS);
+	GetDlgItem(IDC_CHECK_SHOW_HIDE_CHILD_WINDOWS)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_SHOW_HIDE_CHILD_WINDOWS);
+	GetDlgItem(IDC_CHECK_READ_FILE_ICON)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_READ_FILE_ICON);
 	GetDlgItem(IDC_BUTTON_REFRESH_WINDOWS_TREE)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_REFRESH_WINDOWS_TREE);
 	GetDlgItem(IDC_STATIC_WINDOW_STYLE)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WINDOW_STYLE);
 	GetDlgItem(IDC_STATIC_WINDOW_STYLE_EX)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WINDOW_STYLE_EX);
@@ -1709,4 +1871,80 @@ void CWindowsToolsDlg::OnEnChangeEditWindowStyle()
 	// 同时将 ENM_CHANGE 标志“或”运算到掩码中。
 
 	// TODO:  在此添加控件通知处理程序代码
+}
+
+
+void CWindowsToolsDlg::OnBnClickedCheckDisabled()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString TempString;
+	HWND hWnd = NULL;
+	EditWindowHandleDEC.GetWindowText(TempString);
+	_stscanf(TempString, _T("%u"), (PUINT)&hWnd);
+	if (CheckDisabled.GetCheck() == BST_CHECKED)
+	{
+		::EnableWindow(hWnd, FALSE);
+	}
+	else
+	{
+		::EnableWindow(hWnd, TRUE);
+	}
+	if (::IsWindowEnabled(hWnd))
+	{
+		CheckDisabled.SetCheck(BST_UNCHECKED);
+	}
+	else
+	{
+		CheckDisabled.SetCheck(BST_CHECKED);
+	}
+}
+
+
+void CWindowsToolsDlg::OnDestroy()
+{
+	CDialogEx::OnDestroy();
+
+	// TODO: 在此处添加消息处理程序代码
+}
+
+
+void CWindowsToolsDlg::OnBnClickedCheckShowHideWindows()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (ShowHideWindows.GetCheck() == BST_CHECKED)
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideWindows"), _T("TRUE"));
+	}
+	else
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideWindows"), _T("FALSE"));
+	}
+}
+
+
+void CWindowsToolsDlg::OnBnClickedCheckShowHideChildWindows()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (ShowHideChildWindows.GetCheck() == BST_CHECKED)
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideChildWindows"), _T("TRUE"));
+	}
+	else
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ShowHideChildWindows"), _T("FALSE"));
+	}
+}
+
+
+void CWindowsToolsDlg::OnBnClickedCheckReadFileIcon()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (ReadFileIcon.GetCheck() == BST_CHECKED)
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ReadFileIcon"), _T("TRUE"));
+	}
+	else
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ReadFileIcon"), _T("FALSE"));
+	}
 }

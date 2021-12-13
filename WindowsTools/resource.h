@@ -1,6 +1,6 @@
-Ôªø//{{NO_DEPENDENCIES}}
-// Microsoft Visual C++ ÁîüÊàêÁöÑÂåÖÂê´Êñá‰ª∂„ÄÇ
-// ‰æõ WindowsTools.rc ‰ΩøÁî®
+//{{NO_DEPENDENCIES}}
+// Microsoft Visual C++ …˙≥…µƒ∞¸∫¨Œƒº˛°£
+// π© WindowsTools.rc  π”√
 //
 #define IDM_ABOUTBOX                    0x0010
 #define IDD_ABOUTBOX                    100
@@ -58,6 +58,7 @@
 #define IDC_TREE_WINDOWS_TREE           1002
 #define IDC_BUTTON_REFRESH_WINDOWS_TREE 1003
 #define IDC_CHECK_SHOW_HIDE_WINDOWS     1005
+#define IDC_CHECK_SHOW_HIDE_CHILD_WINDOWS 1006
 #define IDC_EDIT_WINDOW_HANDLE_DEC      1007
 #define IDC_EDIT_WINDOW_HANDLE_HEX      1008
 #define IDC_EDIT_EDIT_SELECT_END        1008
@@ -73,6 +74,7 @@
 #define IDC_EDIT_THREAD_HANDLE          1017
 #define IDC_EDIT_PROCESS_ID             1018
 #define IDC_EDIT_PARENT_PROCESS_ID      1019
+#define IDC_CHECK_READ_FILE_ICON        1020
 #define IDC_EDIT_PROCESS_PATH           1022
 #define IDC_EDIT_PROCESS_NAME           1023
 #define IDC_EDIT_WINDOW_RECT_LEFT       1026
@@ -167,6 +169,9 @@
 #define IDC_EXPLORER_CODE               1102
 #define IDC_COMBO1                      1103
 #define IDC_COMBO_SOLUTION              1103
+#define IDC_CHECK_DISABLED              1104
+#define IDC_STATIC_WINDOWS_NUMBER       1105
+#define IDC_STATIC_REFRESH              1106
 #define MENU_HOME_FILE                  32771
 #define ID_FILE_EXIT                    32772
 #define ID_FILE                         32773
@@ -191,7 +196,7 @@
 #ifndef APSTUDIO_READONLY_SYMBOLS
 #define _APS_NEXT_RESOURCE_VALUE        195
 #define _APS_NEXT_COMMAND_VALUE         32788
-#define _APS_NEXT_CONTROL_VALUE         1104
+#define _APS_NEXT_CONTROL_VALUE         1107
 #define _APS_NEXT_SYMED_VALUE           101
 #endif
 #endif

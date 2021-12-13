@@ -86,7 +86,7 @@ CWindowsToolsApp theApp;
 BOOL CWindowsToolsApp::InitInstance()
 {
 	//dump
-	SetUnhandledExceptionFilter(ExceptionFilter);
+	//SetUnhandledExceptionFilter(ExceptionFilter);
 	//Load language
 	AllLanguage = new Language;
 	// 如果一个运行在 Windows XP 上的应用程序清单指定要
