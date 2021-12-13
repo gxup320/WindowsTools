@@ -360,11 +360,11 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	{
 		return;
 	}
-	if (hWnd == ::GetDesktopWindow())
-	{
-		i = IconStruct.DESKTOP;
-	}
-	else
+	//if (hWnd == ::GetDesktopWindow())
+	//{
+	//	i = IconStruct.DESKTOP;
+	//}
+	//else
 	{
 #ifdef _WIN64
 		hicon = (HICON)::GetClassLongA(hWnd, GCLP_HICONSM);
@@ -421,11 +421,11 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	}
 	(*number)++;
 	HTREEITEM hitem;
-	if (hWnd == ::GetDesktopWindow())
-	{
-		hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, i, i, f, TVI_LAST);
-	}
-	else
+	//if (hWnd == ::GetDesktopWindow())
+	//{
+	//	hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, i, i, f, TVI_LAST);
+	//}
+	//else
 	{
 		hitem = ptree->InsertItem(str, i, i, f, TVI_LAST);
 	}
@@ -452,11 +452,11 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 		addWindowToTree(ptree, m_hwnd, hitem, image, hWnd, number);
 		m_hwnd = ::GetWindow(m_hwnd, GW_HWNDNEXT);
 	}
-	if (hWnd == ::GetDesktopWindow())
-	{
-		ptree->SetItem(hitem, TVIF_TEXT, str, 0, 0, NULL, NULL, NULL);
-		ptree->Expand(hitem, TVE_EXPAND);
-	}
+	//if (hWnd == ::GetDesktopWindow())
+	//{
+	//	ptree->SetItem(hitem, TVIF_TEXT, str, 0, 0, NULL, NULL, NULL);
+	//	ptree->Expand(hitem, TVE_EXPAND);
+	//}
 
 }
 
@@ -604,8 +604,9 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	ToolsDlg->Progress_ON = TRUE;
 	//ToolsDlg->ProcessWindowsRefresh.SetPos(0);
 	ToolsDlg->Progress_POS = 0;
+	HWND hWnd = ::GetDesktopWindow();
 	std::vector<HWND> hWndList;
-	HWND tHwnd = GetWindow(::GetDesktopWindow(), GW_CHILD);
+	HWND tHwnd = GetWindow(hWnd, GW_CHILD);
 
 	HTREEITEM hitem = ptree->InsertItem(AllLanguage->GetLanguageStruct()->DIALOG_TREE_LOADING, ToolsDlg->IconStruct.DESKTOP, ToolsDlg->IconStruct.DESKTOP, 0, TVI_LAST);
 	while (tHwnd != NULL)
@@ -622,7 +623,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 	//}
 	for (int i = 0, number = 0; i < hWndList.size() && ToolsDlg->WindowClosing == 0; i++)
 	{
-		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, ::GetDesktopWindow(), &number);
+		ToolsDlg->addWindowToTree(ptree, hWndList[i], hitem, ToolsDlg->m_image, hWnd, &number);
 		//ToolsDlg->ProcessWindowsRefresh.SetPos(i + 1);
 		ToolsDlg->Progress_POS = i + 1;
 		//CString tempString;
@@ -635,11 +636,14 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 		//}
 	}
 	CString ClassName;
-	::GetClassName(::GetDesktopWindow(), ClassName.GetBuffer(100), 100);
+	::GetClassName(hWnd, ClassName.GetBuffer(100), 100);
 	ClassName.ReleaseBuffer();
-	ClassName = (size_t)GetDesktopWindow() + _T("|") + ClassName + _T("|");
-	ptree->SetItem(hitem, TVIF_TEXT, ClassName, 0, 0, NULL, NULL, NULL);
+	CString tempString;
+	tempString.Format(_T("%u"), (size_t)hWnd);
+	tempString = tempString + _T("|") + ClassName + _T("|");
+	ptree->SetItem(hitem, TVIF_TEXT, tempString, 0, 0, NULL, NULL, NULL);
 	ptree->Expand(hitem, TVE_EXPAND);
+	ptree->SetItemData(hitem, (DWORD_PTR)hWnd);
 	HTREEITEM hItem = ptree->GetRootItem();
 	if (SelectWindowItam != NULL)
 	{
