@@ -1029,7 +1029,9 @@ void CWindowsToolsDlg::OnSize(UINT nType, int cx, int cy)
 	CTreeCtrl* ptree = (CTreeCtrl*)GetDlgItem(IDC_TREE_WINDOWS_TREE);
 	if (ptree != NULL)
 	{
-		ptree->MoveWindow(CRect(403, 12, cx - 12, cy - 12), FALSE);
+		CRect treeRect = { 0 };
+		ptree->GetWindowRect(&treeRect);
+		ptree->MoveWindow(CRect(treeRect.left, 12, cx - 12, cy - 12), FALSE);
 		Invalidate();
 	}
 }
