@@ -123,6 +123,7 @@ BOOL CWindowsToolsApp::InitInstance()
 	CWindowsToolsDlg dlg;
 	m_pMainWnd = &dlg;
 	INT_PTR nResponse = dlg.DoModal();
+	TRACE("dlgend:%d\n", nResponse);
 	if (nResponse == IDOK)
 	{
 		// TODO: 在此放置处理何时用
@@ -151,8 +152,7 @@ BOOL CWindowsToolsApp::InitInstance()
 
 	// 由于对话框已关闭，所以将返回 FALSE 以便退出应用程序，
 	//  而不是启动应用程序的消息泵。
-	//Clean language
-	delete AllLanguage;
+	
 	return FALSE;
 }
 
@@ -161,11 +161,20 @@ BOOL CWindowsToolsApp::InitInstance()
 int CWindowsToolsApp::ExitInstance()
 {
 	// TODO: 在此添加专用代码和/或调用基类
-
-	CWinApp::ExitInstance();
-	//return 0;
-
+	//Clean language
+	delete AllLanguage;
+	
 	return CWinApp::ExitInstance();
+}
+
+void DoEvents()
+{
+	MSG msg;
+	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
+	{
+		::TranslateMessage(&msg);
+		::DispatchMessage(&msg);
+	}
 }
 
 

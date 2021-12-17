@@ -9,5 +9,4 @@
 
 // 添加要在此处预编译的标头
 #include "framework.h"
-extern BOOL ALL_EXITING;
 #endif //PCH_H

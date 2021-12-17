@@ -81,7 +81,7 @@ public:
 	int WindowSelectStatus;
 	HCURSOR CursorWindowSelect;
 	HCURSOR CursorDefault;
-	DlalogSelectWindow m_DialogSelectWindow;
+	DlalogSelectWindow *m_DialogSelectWindow = NULL;
 	BOOL EditWindowHandleDECEditing = FALSE;
 	BOOL EditWindowHandleHEXEditing = FALSE;
 	BOOL EditRelevantMessage = TRUE;

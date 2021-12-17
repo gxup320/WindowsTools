@@ -213,8 +213,8 @@ BOOL CWindowsToolsDlg::OnInitDialog()
 	WindowSelectStatus = IDB_BITMAP_FREE;
 	CursorWindowSelect = AfxGetApp()->LoadCursor(IDC_CURSOR_WINDOW_SELECT);
 	CursorDefault = LoadCursor(NULL, IDC_ARROW);
-
-	m_DialogSelectWindow.Create(IDD_DIALOG_SELECT_WINDOW, this);
+	m_DialogSelectWindow = new DlalogSelectWindow;
+	m_DialogSelectWindow->Create(IDD_DIALOG_SELECT_WINDOW, this);
 	ComboSpecifiesShow.AddString(_T("SW_HIDE"));
 	ComboSpecifiesShow.AddString(_T("SW_SHOWNORMAL/SW_NORMAL"));
 	ComboSpecifiesShow.AddString(_T("SW_SHOWMINIMIZED"));
@@ -1158,16 +1158,6 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 	CDialogEx::OnMouseMove(nFlags, point);
 }
 
-void DoEvents()
-{
-	MSG msg;
-	if (::PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
-	{
-		::TranslateMessage(&msg);
-		::DispatchMessage(&msg);
-	}
-}
-
 void CWindowsToolsDlg::OnClose()
 {
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
@@ -1207,6 +1197,12 @@ void CWindowsToolsDlg::OnClose()
 		m_image->DeleteImageList();
 		delete m_image;
 	}
+	if (m_DialogSelectWindow != NULL)
+	{
+		m_DialogSelectWindow->DestroyWindow();
+		delete m_DialogSelectWindow;
+	}
+	//EndDialog(0);
 	CDialogEx::OnClose();
 }
 

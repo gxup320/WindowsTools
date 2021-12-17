@@ -6,8 +6,6 @@
 #include "DlalogSelectWindow.h"
 #include "afxdialogex.h"
 
-BOOL ALL_EXITING = FALSE;
-
 // DialogSelectWindow 对话框
 
 IMPLEMENT_DYNAMIC(DlalogSelectWindow, CDialogEx)
@@ -101,7 +99,7 @@ DWORD MarkWindows(DlalogSelectWindow* MarksDlg)
 	extern HWND MarkWindowHwnd;
 	RECT Rect_temp = { 0 };
 	int SW_Temp = SW_HIDE;
-	while (!ALL_EXITING)
+	while (!MarksDlg->ALL_EXITING)
 	{
 		if (IsWindow(MarkWindowHwnd))
 		{
@@ -184,7 +182,28 @@ BOOL DlalogSelectWindow::OnInitDialog()
 
 void DlalogSelectWindow::OnClose()
 {
-	ALL_EXITING = TRUE;
+	return;
 	CDialogEx::OnClose();
 }
 
+
+
+BOOL DlalogSelectWindow::DestroyWindow()
+{
+	// TODO: 在此添加专用代码和/或调用基类
+	ALL_EXITING = TRUE;
+	DWORD TexitCode;
+	if (hThread_MarkWindows != NULL)
+	{
+		TexitCode = STILL_ACTIVE;
+		while (TexitCode == STILL_ACTIVE)
+		{
+			DoEvents();
+			Sleep(1);
+			GetExitCodeThread(hThread_MarkWindows, &TexitCode);
+		}
+		TRACE("hThread_MarkWindows:%u\n", TexitCode);
+		CloseHandle(hThread_MarkWindows);
+	}
+	return CDialogEx::DestroyWindow();
+}

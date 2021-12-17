@@ -32,3 +32,4 @@ public:
 
 extern CWindowsToolsApp theApp;
 void DrowErrorCode(DWORD dwLastError, HWND hWnd);
+void DoEvents();

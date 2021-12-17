@@ -24,8 +24,10 @@ protected:
 public:
 	CDC* pDC;
 	HANDLE hThread_MarkWindows = NULL;
+	BOOL ALL_EXITING = FALSE;
 
 	afx_msg void OnPaint();
 	virtual BOOL OnInitDialog();
 	afx_msg void OnClose();
+	virtual BOOL DestroyWindow();
 };
