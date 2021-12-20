@@ -81,7 +81,7 @@ BOOL DlalogControl::OnInitDialog()
 	ControlType.EDIT = TabControl.InsertItem(1,AllLanguage->GetLanguageStruct()->CONTROL_TAB_EDIT);
 
 	CString TempString;
-	::GetClassName(OperateHWND, TempString.GetBuffer(MAX_PATH), MAX_PATH);
+	::RealGetWindowClass(OperateHWND, TempString.GetBuffer(MAX_PATH), MAX_PATH);
 	TempString.ReleaseBuffer();
 	TabControl.SetCurSel(GetControlTypeID(OperateHWND, TempString, ControlType));
 

@@ -95,6 +95,8 @@ public:
 	int WindowClosing = 0;
 	HANDLE hThread_ProgressRefresh = NULL;
 	HANDLE hThread_RefreshWindowsTree = NULL;
+	int WindowsTreeLeft = 0;
+	BOOL GetHideWindowTemp = FALSE;
 	
 	afx_msg void OnBnClickedButtonRefreshWindowsTree();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -175,4 +177,6 @@ public:
 	afx_msg void OnBnClickedCheckShowHideWindows();
 	afx_msg void OnBnClickedCheckShowHideChildWindows();
 	afx_msg void OnBnClickedCheckReadFileIcon();
+	CButton GetHideWindow;
+	afx_msg void OnBnClickedCheckGetHideWindow();
 };

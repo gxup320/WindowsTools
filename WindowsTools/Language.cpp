@@ -96,6 +96,8 @@ Language::Language()
 			LanguageTemp.DIALOG_WINDOW_STYLE = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_WINDOW_STYLE"), LanguageTemp.DIALOG_WINDOW_STYLE);
 			LanguageTemp.DIALOG_WINDOW_STYLE_EX = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_WINDOW_STYLE_EX"), LanguageTemp.DIALOG_WINDOW_STYLE_EX);
 			LanguageTemp.DIALOG_WINDOW_STYLE_ADVANCED = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_WINDOW_STYLE_ADVANCED"), LanguageTemp.DIALOG_WINDOW_STYLE_ADVANCED);
+			LanguageTemp.DIALOG_CHECK_DISABLED = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("DIALOG_CHECK_DISABLED"), LanguageTemp.DIALOG_CHECK_DISABLED);
+			LanguageTemp.CHECK_GET_HIDE_WINDOW = G_ReadPrivateProfileString(fullname, _T("Dialog"), _T("CHECK_GET_HIDE_WINDOW"), LanguageTemp.CHECK_GET_HIDE_WINDOW);
 			
 			//Control
 			LanguageTemp.CONTROL_WINDOW_HANDLE = G_ReadPrivateProfileString(fullname, _T("CONTROL"), _T("CONTROL_WINDOW_HANDLE"), LanguageTemp.CONTROL_WINDOW_HANDLE);

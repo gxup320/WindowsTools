@@ -112,6 +112,7 @@ void CWindowsToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_DISABLED, CheckDisabled);
 	DDX_Control(pDX, IDC_STATIC_WINDOWS_NUMBER, StaticWindowNmuber);
 	DDX_Control(pDX, IDC_CHECK_READ_FILE_ICON, ReadFileIcon);
+	DDX_Control(pDX, IDC_CHECK_GET_HIDE_WINDOW, GetHideWindow);
 }
 
 BEGIN_MESSAGE_MAP(CWindowsToolsDlg, CDialogEx)
@@ -160,6 +161,7 @@ ON_WM_DESTROY()
 ON_BN_CLICKED(IDC_CHECK_SHOW_HIDE_WINDOWS, &CWindowsToolsDlg::OnBnClickedCheckShowHideWindows)
 ON_BN_CLICKED(IDC_CHECK_SHOW_HIDE_CHILD_WINDOWS, &CWindowsToolsDlg::OnBnClickedCheckShowHideChildWindows)
 ON_BN_CLICKED(IDC_CHECK_READ_FILE_ICON, &CWindowsToolsDlg::OnBnClickedCheckReadFileIcon)
+ON_BN_CLICKED(IDC_CHECK_GET_HIDE_WINDOW, &CWindowsToolsDlg::OnBnClickedCheckGetHideWindow)
 END_MESSAGE_MAP()
 
 
@@ -243,8 +245,16 @@ BOOL CWindowsToolsDlg::OnInitDialog()
 	{
 		ReadFileIcon.SetCheck(BST_CHECKED);
 	}
+	if (G_ReadPrivateProfileString(_T("./config.ini"), _T("SniffingWindow"), _T("GetHideWindow"), _T("FALSE")) == "TRUE")
+	{
+		GetHideWindow.SetCheck(BST_CHECKED);
+	}
 	hThread_ProgressRefresh = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProgressRefresh, this, 0, NULL);
 	
+	CRect treeRect = { 0 };
+	GetDlgItem(IDC_TREE_WINDOWS_TREE)->GetWindowRect(&treeRect);
+	WindowsTreeLeft = treeRect.left;
+
 
 	OnBnClickedButtonRefreshWindowsTree();
 
@@ -340,7 +350,7 @@ void CWindowsToolsDlg::addWindowToTree(CTreeCtrl* ptree, HWND hWnd, HTREEITEM f,
 	HICON hicon = NULL;
 	CString str;
 	TCHAR ClassName[51] = { 0 };
-	::GetClassName(hWnd, ClassName, 50);
+	::RealGetWindowClass(hWnd, ClassName, 50);
 	int WindowTextLength = ::GetWindowTextLength(hWnd) + 1;
 	LPTSTR WindowText = new TCHAR[WindowTextLength];
 	::GetWindowText(hWnd, WindowText, WindowTextLength);
@@ -636,7 +646,7 @@ DWORD RefreshWindowsTree(CWindowsToolsDlg* ToolsDlg)
 		//}
 	}
 	CString ClassName;
-	::GetClassName(hWnd, ClassName.GetBuffer(100), 100);
+	::RealGetWindowClass(hWnd, ClassName.GetBuffer(100), 100);
 	ClassName.ReleaseBuffer();
 	CString tempString;
 	tempString.Format(_T("%u"), (size_t)hWnd);
@@ -1027,11 +1037,11 @@ void CWindowsToolsDlg::OnSize(UINT nType, int cx, int cy)
 	
 	// TODO: 在此处添加消息处理程序代码
 	CTreeCtrl* ptree = (CTreeCtrl*)GetDlgItem(IDC_TREE_WINDOWS_TREE);
-	if (ptree != NULL)
+	if (ptree != NULL && WindowsTreeLeft != 0)
 	{
-		CRect treeRect = { 0 };
-		ptree->GetWindowRect(&treeRect);
-		ptree->MoveWindow(CRect(treeRect.left, 12, cx - 12, cy - 12), FALSE);
+		//CRect treeRect = { 0 };
+		//ptree->GetWindowRect(&treeRect);
+		ptree->MoveWindow(CRect(WindowsTreeLeft, 12, cx - 12, cy - 12), FALSE);
 		Invalidate();
 	}
 }
@@ -1054,7 +1064,7 @@ void CWindowsToolsDlg::OnTvnSelchangedTreeWindowsTree(NMHDR* pNMHDR, LRESULT* pR
 	*pResult = 0;
 }
 
-HWND LocalWindowFromPoint(POINT point, HWND parent)
+HWND LocalWindowFromPoint(POINT point, HWND parent, BOOL GetHideWindow)
 {
 	if (parent == NULL)
 	{
@@ -1072,7 +1082,8 @@ HWND LocalWindowFromPoint(POINT point, HWND parent)
 	HWND minWindowHandle = NULL;
 	while (cur != NULL)
 	{
-		if (IsWindow(cur) == FALSE)
+		if (IsWindow(cur) == FALSE ||			//过滤非窗口的句柄
+			GetHideWindow == FALSE && IsWindowVisible(cur) == FALSE)//过滤隐藏窗口
 		{
 			cur = GetWindow(cur, GW_HWNDNEXT);
 			continue;
@@ -1095,7 +1106,7 @@ HWND LocalWindowFromPoint(POINT point, HWND parent)
 	{
 		return parent;
 	}
-	return LocalWindowFromPoint(point, minWindowHandle);
+	return LocalWindowFromPoint(point, minWindowHandle, GetHideWindow);
 }
 
 void CWindowsToolsDlg::OnLButtonDown(UINT nFlags, CPoint point)
@@ -1103,6 +1114,14 @@ void CWindowsToolsDlg::OnLButtonDown(UINT nFlags, CPoint point)
 	// TODO: 在此添加消息处理程序代码和/或调用默认值
 	if (point.x > 30 && point.x < 61 && point.y > 30 && point.y < 58)
 	{
+		if (GetHideWindow.GetCheck() == BST_CHECKED)
+		{
+			GetHideWindowTemp = TRUE;
+		}
+		else
+		{
+			GetHideWindowTemp = FALSE;
+		}
 		WindowSelectStatus = IDB_BITMAP_BUSY;
 		InvalidateRect(CRect(30, 30, 61, 58));
 		SetCursor(CursorWindowSelect);
@@ -1122,7 +1141,7 @@ void CWindowsToolsDlg::OnLButtonUp(UINT nFlags, CPoint point)
 		POINT mpoint;
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
-		HWND hWnd = LocalWindowFromPoint(mpoint, NULL);
+		HWND hWnd = LocalWindowFromPoint(mpoint, NULL, GetHideWindowTemp);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), hWnd);
@@ -1138,7 +1157,7 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 		POINT mpoint;
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
-		HWND hWnd = LocalWindowFromPoint(mpoint, NULL);
+		HWND hWnd = LocalWindowFromPoint(mpoint, NULL, GetHideWindowTemp);
 		MarkWindowHwnd = hWnd;
 		GetWindowInfoToWindow(hWnd);
 		//Invalidate();
@@ -1593,6 +1612,8 @@ void CWindowsToolsDlg::SetWindowShowText()
 	GetDlgItem(IDC_STATIC_WINDOW_STYLE)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WINDOW_STYLE);
 	GetDlgItem(IDC_STATIC_WINDOW_STYLE_EX)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WINDOW_STYLE_EX);
 	GetDlgItem(IDC_BUTTON_WINDOW_STYLE_ADVANCED)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_WINDOW_STYLE_ADVANCED);
+	GetDlgItem(IDC_CHECK_DISABLED)->SetWindowText(AllLanguage->GetLanguageStruct()->DIALOG_CHECK_DISABLED);
+	GetDlgItem(IDC_CHECK_GET_HIDE_WINDOW)->SetWindowText(AllLanguage->GetLanguageStruct()->CHECK_GET_HIDE_WINDOW);
 
 }
 
@@ -1948,5 +1969,19 @@ void CWindowsToolsDlg::OnBnClickedCheckReadFileIcon()
 	else
 	{
 		G_WritePrivateProfileString(_T("./config.ini"), _T("RefreshWindowsTree"), _T("ReadFileIcon"), _T("FALSE"));
+	}
+}
+
+
+void CWindowsToolsDlg::OnBnClickedCheckGetHideWindow()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	if (GetHideWindow.GetCheck() == BST_CHECKED)
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("SniffingWindow"), _T("GetHideWindow"), _T("TRUE"));
+	}
+	else
+	{
+		G_WritePrivateProfileString(_T("./config.ini"), _T("SniffingWindow"), _T("GetHideWindow"), _T("FALSE"));
 	}
 }

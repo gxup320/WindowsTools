@@ -74,6 +74,8 @@ struct LanguageStruct
 	CString DIALOG_WINDOW_STYLE = _T("Style:");
 	CString DIALOG_WINDOW_STYLE_EX = _T("Extended style:");
 	CString DIALOG_WINDOW_STYLE_ADVANCED = _T("Advanced");
+	CString DIALOG_CHECK_DISABLED = _T("Disabled");
+	CString CHECK_GET_HIDE_WINDOW = _T("Get hide window");
 
 	//Contol
 	CString CONTROL_WINDOW_HANDLE = _T("Window handle:");
