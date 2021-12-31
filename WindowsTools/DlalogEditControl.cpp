@@ -25,6 +25,7 @@ void DlalogEditControl::DoDataExchange(CDataExchange* pDX)
 {
 	CDialogEx::DoDataExchange(pDX);
 	DDX_Control(pDX, IDC_EDIT_EDIT_TEXT, EditEditText);
+	DDX_Control(pDX, IDC_EDIT_EDIT_LIMIT_TEXT_LENGTH, EditEditLimitTextLength);
 }
 
 
@@ -38,6 +39,7 @@ BEGIN_MESSAGE_MAP(DlalogEditControl, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_EDIT_PASTE, &DlalogEditControl::OnBnClickedButtonEditPaste)
 	ON_BN_CLICKED(IDC_BUTTON_EDIT_DELETE, &DlalogEditControl::OnBnClickedButtonEditDelete)
 	ON_BN_CLICKED(IDC_BUTTON_EDIT_UNDO, &DlalogEditControl::OnBnClickedButtonEditUndo)
+	ON_BN_CLICKED(IDC_BUTTON_EDIT_LIMIT_SET, &DlalogEditControl::OnBnClickedButtonEditLimitSet)
 END_MESSAGE_MAP()
 
 
@@ -239,4 +241,22 @@ void DlalogEditControl::OnBnClickedButtonEditUndo()
 		return;
 	}
 	::SendMessage(hWnd, EM_UNDO, 0, 0);
+}
+
+
+void DlalogEditControl::OnBnClickedButtonEditLimitSet()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString TempString = _T("");
+	HWND hWnd = NULL;
+	int TextLength = 0;
+	OperateEdit->GetWindowText(TempString);
+	int i_ret = _stscanf(TempString, _T("%u"), (PUINT)&hWnd);
+	if (i_ret == 0 || hWnd == NULL)
+	{
+		return;
+	}
+	EditEditLimitTextLength.GetWindowText(TempString);
+	_stscanf(TempString, _T("%d"), &TextLength);
+	::SendMessage(hWnd, EM_LIMITTEXT, TextLength, NULL);
 }

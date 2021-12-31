@@ -32,4 +32,6 @@ public:
 	afx_msg void OnBnClickedButtonEditPaste();
 	afx_msg void OnBnClickedButtonEditDelete();
 	afx_msg void OnBnClickedButtonEditUndo();
+	CEdit EditEditLimitTextLength;
+	afx_msg void OnBnClickedButtonEditLimitSet();
 };
