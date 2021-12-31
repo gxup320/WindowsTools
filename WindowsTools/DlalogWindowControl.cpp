@@ -41,7 +41,7 @@ void DlalogWindowControl::initData()
 	{
 		CheckControlWsExLayered.SetCheck(BST_UNCHECKED);
 	}
-
+	OnBnClickedButtonMoveGet();
 }
 
 void DlalogWindowControl::DoDataExchange(CDataExchange* pDX)
@@ -52,6 +52,11 @@ void DlalogWindowControl::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_CHECK_TRANSPARENT_COLOR, CheckTransparentColor);
 	DDX_Control(pDX, IDC_CHECK_TRANSPARENT_ALPHA, CheckTransparentAlpha);
 	DDX_Control(pDX, IDC_CHECK_CONTROL_WS_EX_LAYERED, CheckControlWsExLayered);
+	DDX_Control(pDX, IDC_EDIT_WINDOW_CONTROL_MOVE_LEFT, EditWindowControlMoveLeft);
+	DDX_Control(pDX, IDC_EDIT_WINDOW_CONTROL_MOVE_RIGHT, EditWindowControlMoveRight);
+	DDX_Control(pDX, IDC_EDIT_WINDOW_CONTROL_MOVE_TOP, EditWindowControlMoveTop);
+	DDX_Control(pDX, IDC_EDIT_WINDOW_CONTROL_MOVE_BOTTOM, EditWindowControlMoveBottom);
+	DDX_Control(pDX, IDC_CHECK_MOVE_REPAINT, CheckMoveRepaint);
 }
 
 
@@ -59,6 +64,8 @@ BEGIN_MESSAGE_MAP(DlalogWindowControl, CDialogEx)
 	ON_BN_CLICKED(IDC_BUTTON_TRANSPARENT_GET, &DlalogWindowControl::OnBnClickedButtonTransparentGet)
 	ON_BN_CLICKED(IDC_BUTTON_TRANSPARENT_SET, &DlalogWindowControl::OnBnClickedButtonTransparentSet)
 	ON_BN_CLICKED(IDC_CHECK_CONTROL_WS_EX_LAYERED, &DlalogWindowControl::OnBnClickedCheckControlWsExLayered)
+	ON_BN_CLICKED(IDC_BUTTON_MOVE_GET, &DlalogWindowControl::OnBnClickedButtonMoveGet)
+	ON_BN_CLICKED(IDC_BUTTON_MOVE_SET, &DlalogWindowControl::OnBnClickedButtonMoveSet)
 END_MESSAGE_MAP()
 
 
@@ -176,5 +183,70 @@ void DlalogWindowControl::OnBnClickedCheckControlWsExLayered()
 	else
 	{
 		CheckControlWsExLayered.SetCheck(BST_UNCHECKED);
+	}
+}
+
+
+void DlalogWindowControl::OnBnClickedButtonMoveGet()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString TempString = _T("");
+	HWND hWnd = NULL;
+	HWND phWnd = NULL;
+	int lw = 0;
+	int th = 0;
+	RECT rect = { };
+	RECT srect = { };
+	RECT cltRect = { };
+	RECT wndRect = { };
+	OperateEdit->GetWindowText(TempString);
+	_stscanf(TempString, _T("%u"), (PUINT)&hWnd);
+	phWnd = ::GetParent(hWnd);
+	if (phWnd != NULL && ::IsChild(phWnd, hWnd) == TRUE)
+	{
+		::GetClientRect(phWnd, &cltRect);
+		::GetWindowRect(phWnd, &wndRect);
+		lw = ((wndRect.right - wndRect.left) - (cltRect.right - cltRect.left)) / 2;
+		th = ((wndRect.bottom - wndRect.top) - (cltRect.bottom - cltRect.top)) - lw;
+	}
+	::GetWindowRect(hWnd, &rect);
+	srect.left = rect.left - wndRect.left - lw;
+	srect.right = rect.right - wndRect.left - lw;
+	srect.top = rect.top - wndRect.top - th;
+	srect.bottom = rect.bottom - wndRect.top - th;
+	TempString.Format(_T("%d"), srect.left);
+	EditWindowControlMoveLeft.SetWindowText(TempString);
+	TempString.Format(_T("%d"), srect.right);
+	EditWindowControlMoveRight.SetWindowText(TempString);
+	TempString.Format(_T("%d"), srect.top);
+	EditWindowControlMoveTop.SetWindowText(TempString);
+	TempString.Format(_T("%d"), srect.bottom);
+	EditWindowControlMoveBottom.SetWindowText(TempString);
+}
+
+
+void DlalogWindowControl::OnBnClickedButtonMoveSet()
+{
+	// TODO: 在此添加控件通知处理程序代码
+	CString TempString = _T("");
+	HWND hWnd = NULL;
+	OperateEdit->GetWindowText(TempString);
+	_stscanf(TempString, _T("%u"), (PUINT)&hWnd);
+	RECT rect = { };
+	EditWindowControlMoveLeft.GetWindowText(TempString);
+	_stscanf(TempString, _T("%d"), &rect.left);
+	EditWindowControlMoveRight.GetWindowText(TempString);
+	_stscanf(TempString, _T("%d"), &rect.right);
+	EditWindowControlMoveTop.GetWindowText(TempString);
+	_stscanf(TempString, _T("%d"), &rect.top);
+	EditWindowControlMoveBottom.GetWindowText(TempString);
+	_stscanf(TempString, _T("%d"), &rect.bottom);
+	if (CheckMoveRepaint.GetCheck() == BST_CHECKED)
+	{
+		::MoveWindow(hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, TRUE);
+	}
+	else
+	{
+		::MoveWindow(hWnd, rect.left, rect.top, rect.right - rect.left, rect.bottom - rect.top, FALSE);
 	}
 }

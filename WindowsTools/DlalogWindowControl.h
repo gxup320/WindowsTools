@@ -36,4 +36,11 @@ public:
 	afx_msg void OnBnClickedButtonTransparentSet();
 	afx_msg void OnBnClickedCheckControlWsExLayered();
 	CButton CheckControlWsExLayered;
+	CEdit EditWindowControlMoveLeft;
+	CEdit EditWindowControlMoveRight;
+	CEdit EditWindowControlMoveTop;
+	CEdit EditWindowControlMoveBottom;
+	afx_msg void OnBnClickedButtonMoveGet();
+	afx_msg void OnBnClickedButtonMoveSet();
+	CButton CheckMoveRepaint;
 };
