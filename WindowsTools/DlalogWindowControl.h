@@ -12,6 +12,7 @@ public:
 	virtual ~DlalogWindowControl();
 	CEdit* OperateEdit = NULL;
 	void initData();
+	void moveLock(int x, int y);
 
 // 对话框数据
 #ifdef AFX_DESIGN_TIME
@@ -24,6 +25,9 @@ protected:
 	DECLARE_MESSAGE_MAP()
 public:
 	BOOL Unattended = FALSE;
+	int MoveLockX = 0;
+	int MoveLockY = 0;
+	BOOL MoveLockAutoing = FALSE;
 
 	CMFCColorButton ColorTransparent;
 	CSliderCtrl SliderTransparent;
@@ -43,4 +47,9 @@ public:
 	afx_msg void OnBnClickedButtonMoveGet();
 	afx_msg void OnBnClickedButtonMoveSet();
 	CButton CheckMoveRepaint;
+	CButton CheckWindowControlMoveLock;
+	afx_msg void OnEnChangeEditWindowControlMoveLeft();
+	afx_msg void OnEnChangeEditWindowControlMoveRight();
+	afx_msg void OnEnChangeEditWindowControlMoveTop();
+	afx_msg void OnEnChangeEditWindowControlMoveBottom();
 };
