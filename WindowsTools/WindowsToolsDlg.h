@@ -97,6 +97,7 @@ public:
 	HANDLE hThread_RefreshWindowsTree = NULL;
 	int WindowsTreeLeft = 0;
 	BOOL GetHideWindowTemp = FALSE;
+	CRect ClassNameEdirtRect;
 	
 	afx_msg void OnBnClickedButtonRefreshWindowsTree();
 	afx_msg void OnSize(UINT nType, int cx, int cy);
@@ -179,4 +180,5 @@ public:
 	afx_msg void OnBnClickedCheckReadFileIcon();
 	CButton GetHideWindow;
 	afx_msg void OnBnClickedCheckGetHideWindow();
+	CEdit EditWindowClassName_1;
 };

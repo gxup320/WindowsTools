@@ -113,6 +113,7 @@ void CWindowsToolsDlg::DoDataExchange(CDataExchange* pDX)
 	DDX_Control(pDX, IDC_STATIC_WINDOWS_NUMBER, StaticWindowNmuber);
 	DDX_Control(pDX, IDC_CHECK_READ_FILE_ICON, ReadFileIcon);
 	DDX_Control(pDX, IDC_CHECK_GET_HIDE_WINDOW, GetHideWindow);
+	DDX_Control(pDX, IDC_EDIT_WINDOW_CLASS_NAME_1, EditWindowClassName_1);
 }
 
 BEGIN_MESSAGE_MAP(CWindowsToolsDlg, CDialogEx)
@@ -251,9 +252,12 @@ BOOL CWindowsToolsDlg::OnInitDialog()
 	}
 	hThread_ProgressRefresh = CreateThread(NULL, 0, (LPTHREAD_START_ROUTINE)ProgressRefresh, this, 0, NULL);
 	
-	CRect treeRect = { 0 };
+	CRect treeRect;
 	GetDlgItem(IDC_TREE_WINDOWS_TREE)->GetWindowRect(&treeRect);
+	ScreenToClient(&treeRect);
 	WindowsTreeLeft = treeRect.left;
+	EditWindowClassName.GetWindowRect(&ClassNameEdirtRect);
+	ScreenToClient(&ClassNameEdirtRect);
 
 
 	OnBnClickedButtonRefreshWindowsTree();
@@ -790,7 +794,26 @@ void CWindowsToolsDlg::GetWindowInfoToWindow(HWND hWnd)
 	//Class name
 	::RealGetWindowClass(hWnd, TempString.GetBuffer(50), 50);
 	TempString.ReleaseBuffer();
+	CString ClassName_1;
+	::GetClassName(hWnd, ClassName_1.GetBuffer(50), 50);
+	ClassName_1.ReleaseBuffer();
+	if (TempString == ClassName_1)
+	{
+		EditWindowClassName_1.ShowWindow(SW_HIDE);
+		//CRect tempRect = CRect(ClassNameEdirtRect.left, ClassNameEdirtRect.top, ClassNameEdirtRect.right, ClassNameEdirtRect.bottom);
+		EditWindowClassName.MoveWindow(ClassNameEdirtRect);
+	}
+	else
+	{
+		EditWindowClassName_1.SetWindowText(ClassName_1);
+		EditWindowClassName_1.ShowWindow(SW_SHOW);
+		CRect tempRect = CRect(ClassNameEdirtRect.left, ClassNameEdirtRect.top, ClassNameEdirtRect.right - (ClassNameEdirtRect.right - ClassNameEdirtRect.left) / 2, ClassNameEdirtRect.bottom);
+		EditWindowClassName.MoveWindow(tempRect);
+		//EditWindowClassName.
+	}
 	EditWindowClassName.SetWindowText(TempString);
+	//Invalidate();
+	
 	//Control ID
 	TempString.Format(_T("%d"), ::GetDlgCtrlID(hWnd));
 	EditWindowControlID.SetWindowText(TempString);
