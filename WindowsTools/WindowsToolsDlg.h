@@ -74,6 +74,7 @@ public:
 	void SetTreeViewBoldSelect(HTREEITEM RootItemHandle, HWND hWnd);
 	void GetWindowRectToWindow(HWND hWnd, HWND ParenthWnd, HWND _Static = NULL);
 	void MoveWindowFromWindow(HWND Static, BOOL Relative = FALSE);
+	BOOL IsLocalWindow(HWND hWnd);
 
 	tag_WINDOW_TYPE_LIST IconStruct;
 	int IconStructSum;

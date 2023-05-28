@@ -1176,9 +1176,17 @@ void CWindowsToolsDlg::OnLButtonUp(UINT nFlags, CPoint point)
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
 		HWND hWnd = LocalWindowFromPoint(mpoint, NULL, GetHideWindowTemp);
-		MarkWindowHwnd = hWnd;
-		GetWindowInfoToWindow(hWnd);
-		SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), hWnd);
+		if (IsLocalWindow(hWnd))
+		{
+			MarkWindowHwnd = NULL;
+			SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), NULL);
+		}
+		else
+		{
+			MarkWindowHwnd = hWnd;
+			GetWindowInfoToWindow(hWnd);
+			SetTreeViewBoldSelect(TreeWindowsTreeCtrl.GetRootItem(), hWnd);
+		}
 	}
 	CDialogEx::OnLButtonUp(nFlags, point);
 }
@@ -1192,8 +1200,15 @@ void CWindowsToolsDlg::OnMouseMove(UINT nFlags, CPoint point)
 		GetCursorPos(&mpoint);
 		//HWND hWnd = ::WindowFromPoint(mpoint);
 		HWND hWnd = LocalWindowFromPoint(mpoint, NULL, GetHideWindowTemp);
-		MarkWindowHwnd = hWnd;
-		GetWindowInfoToWindow(hWnd);
+		if (IsLocalWindow(hWnd))
+		{
+			MarkWindowHwnd = NULL;
+		}
+		else
+		{
+			MarkWindowHwnd = hWnd;
+			GetWindowInfoToWindow(hWnd);
+		}
 		//Invalidate();
 	}
 	else
@@ -1416,6 +1431,19 @@ void CWindowsToolsDlg::MoveWindowFromWindow(HWND _Static, BOOL Relative)
 	EditRelevantMessage = FALSE;
 	GetWindowRectToWindow(hWnd, PhWnd, _Static);
 	EditRelevantMessage = TRUE;
+}
+
+BOOL CWindowsToolsDlg::IsLocalWindow(HWND hWnd)
+{
+	while (hWnd != NULL)
+	{
+		if (hWnd == m_hWnd)
+		{
+			return TRUE;
+		}
+		hWnd = ::GetParent(hWnd);
+	}
+	return FALSE;
 }
 
 void CWindowsToolsDlg::OnEnChangeEditWindowRectLeft()
