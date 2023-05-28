@@ -703,7 +703,18 @@ void CWindowsToolsDlg::GetWindowRectToWindow(HWND hWnd, HWND ParenthWnd, HWND _S
 	CString TempString;
 	//RECT
 	RECT rect = { };
+	POINT p;
 	::GetWindowRect(hWnd, &rect);
+	p.x = rect.left;
+	p.y = rect.top;
+	::ScreenToClient(ParenthWnd, &p);
+	rect.left = p.x;
+	rect.top = p.y;
+	p.x = rect.right;
+	p.y = rect.bottom;
+	::ScreenToClient(ParenthWnd, &p);
+	rect.right = p.x;
+	rect.bottom = p.y;
 	if (EditWindowRectLeft.m_hWnd != _Static)
 	{
 		TempString.Format(_T("%d"), rect.left);
@@ -734,16 +745,16 @@ void CWindowsToolsDlg::GetWindowRectToWindow(HWND hWnd, HWND ParenthWnd, HWND _S
 		TempString.Format(_T("%d"), rect.bottom - rect.top);
 		EditWindowHigth.SetWindowText(TempString);
 	}
-	POINT point = { 0 };
-	::MapWindowPoints(hWnd, ParenthWnd, &point, 1);
+	//POINT point = { 0 };
+	//::MapWindowPoints(hWnd, ParenthWnd, &point, 1);
 	if (EditWindowRelativeRectLeft.m_hWnd != _Static)
 	{
-		TempString.Format(_T("%d"), point.x);
+		TempString.Format(_T("%d"), rect.left);
 		EditWindowRelativeRectLeft.SetWindowText(TempString);
 	}
 	if (EditWindowRelativeRectTop.m_hWnd != _Static)
 	{
-		TempString.Format(_T("%d"), point.y);
+		TempString.Format(_T("%d"), rect.top);
 		EditWindowRelativeRectTop.SetWindowText(TempString);
 	}
 }
@@ -1363,9 +1374,9 @@ void CWindowsToolsDlg::MoveWindowFromWindow(HWND _Static, BOOL Relative)
 	_stscanf(TempString, _T("%u"), (PUINT)&PhWnd);
 	if (Relative)
 	{
-		WINDOWINFO wi;
-		wi.cbSize = sizeof(wi);
-		::GetWindowInfo(PhWnd, &wi);
+		//WINDOWINFO wi;
+		//wi.cbSize = sizeof(wi);
+		//::GetWindowInfo(PhWnd, &wi);
 		EditWindowRelativeRectLeft.GetWindowText(TempString);
 		_stscanf(TempString, _T("%d"), &lift);
 		EditWindowWidth.GetWindowText(TempString);
@@ -1374,15 +1385,15 @@ void CWindowsToolsDlg::MoveWindowFromWindow(HWND _Static, BOOL Relative)
 		_stscanf(TempString, _T("%d"), &top);
 		EditWindowHigth.GetWindowText(TempString);
 		_stscanf(TempString, _T("%d"), &higth);
-		lift -= (wi.rcClient.left - wi.rcWindow.left);
-		top -= (wi.rcClient.top - wi.rcWindow.top);
+		//lift -= (wi.rcClient.left - wi.rcWindow.left);
+		//top -= (wi.rcClient.top - wi.rcWindow.top);
 	}
 	else
 	{
-		RECT rect;
-		POINT point = { 0 };
-		::GetWindowRect(hWnd, &rect);
-		::MapWindowPoints(hWnd, PhWnd, &point, 1);
+		//RECT rect;
+		//POINT point = { 0 };
+		//::GetWindowRect(hWnd, &rect);
+		//::MapWindowPoints(hWnd, PhWnd, &point, 1);
 		EditWindowRectLeft.GetWindowText(TempString);
 		_stscanf(TempString, _T("%d"), &lift);
 		EditWindowRectRight.GetWindowText(TempString);
@@ -1393,13 +1404,13 @@ void CWindowsToolsDlg::MoveWindowFromWindow(HWND _Static, BOOL Relative)
 		EditWindowRectBottom.GetWindowText(TempString);
 		_stscanf(TempString, _T("%d"), &higth);
 		higth -= top;
-		top -= (rect.top - point.y);
-		lift -= (rect.left - point.x);
-		WINDOWINFO wi;
-		wi.cbSize = sizeof(wi);
-		::GetWindowInfo(PhWnd,&wi);
-		lift -= (wi.rcClient.left - wi.rcWindow.left);
-		top -= (wi.rcClient.top - wi.rcWindow.top);
+		//top -= (rect.top - point.y);
+		//lift -= (rect.left - point.x);
+		//WINDOWINFO wi;
+		//wi.cbSize = sizeof(wi);
+		//::GetWindowInfo(PhWnd,&wi);
+		//lift -= (wi.rcClient.left - wi.rcWindow.left);
+		//top -= (wi.rcClient.top - wi.rcWindow.top);
 	}
 	::MoveWindow(hWnd, lift, top, width, higth, TRUE);
 	EditRelevantMessage = FALSE;
