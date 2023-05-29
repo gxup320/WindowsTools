@@ -172,6 +172,11 @@ void DlalogSendMessage::OnCbnSelchangeSmsgComboMessage()
 		delete[] mDemoComboBox;
 		mDemoComboBox = NULL;
 	}
+	if (mDemoButton != NULL)
+	{
+		delete[] mDemoButton;
+		mDemoButton = NULL;
+	}
 	if (MessageName == _T("WM_NULL"))
 	{
 		//需要一个标签来显示提示

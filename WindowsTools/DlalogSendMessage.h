@@ -29,6 +29,7 @@ public:
 	CEdit* mDemoEdit = NULL;
 	CStatic* mDemoStatic = NULL;
 	CComboBox* mDemoComboBox = NULL;
+	CButton* mDemoButton = NULL;
 
 //	afx_msg void OnEnChangeSmsgEditHwnd();
 	//CEdit EditClassName;
