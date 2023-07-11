@@ -793,9 +793,9 @@ void CWindowsToolsDlg::GetWindowInfoToWindow(HWND hWnd)
 	EditParentWindowHandle.SetWindowText(TempString);
 	//Style
 	TempString.Format(_T("%08lX"), ::GetWindowLong(hWnd, GWL_STYLE));
-	EditWindowStyle.SetWindowTextW(TempString);
+	EditWindowStyle.SetWindowText(TempString);
 	TempString.Format(_T("%08lX"), ::GetWindowLong(hWnd, GWL_EXSTYLE));
-	EditWindowStyleEx.SetWindowTextW(TempString);
+	EditWindowStyleEx.SetWindowText(TempString);
 	//Text
 	int TextLength = ::GetWindowTextLength(hWnd) + 1;
 

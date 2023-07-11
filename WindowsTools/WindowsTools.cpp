@@ -23,7 +23,7 @@ int GenerateMiniDump(PEXCEPTION_POINTERS pExceptionPointers)
     LPCTSTR szVersion = _T("DumpDemo_v1.0");
     SYSTEMTIME stLocalTime;
     GetLocalTime(&stLocalTime);
-    wsprintf(szFileName, L"%s-%04d%02d%02d-%02d%02d%02d.dmp",
+    wsprintf(szFileName, _T("%s-%04d%02d%02d-%02d%02d%02d.dmp"),
         szVersion, stLocalTime.wYear, stLocalTime.wMonth, stLocalTime.wDay,
         stLocalTime.wHour, stLocalTime.wMinute, stLocalTime.wSecond);
     HANDLE hDumpFile = CreateFile(szFileName, GENERIC_READ | GENERIC_WRITE,
